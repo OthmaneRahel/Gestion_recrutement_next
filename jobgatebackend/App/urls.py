@@ -25,8 +25,12 @@ urlpatterns = [
     path('Archive/',views.archive_old_forums_Cands,name="archive_old_forums_Cands"),
     path("archive_forums/", get_archive_forums, name="archive_forums"),
     path("archive_candidats/", get_archive_candidats, name="archive_candidats"),
-    path('list_forums_candidature_demain/',views.list_forums_candidature_demain,name="list_forums_candidature_demain")
-
+    path('list_forums_candidature_demain/',views.list_forums_candidature_demain,name="list_forums_candidature_demain"),
+    # path('forgot-password/', views.forgot_password, name='forgot-password'),
+    # path('reset-password/', views.reset_password, name='reset-password'),
+    path('send-verification-code/', views.send_verification_code, name='send_verification_code'),
+    path('verify-code/', views.verify_code, name='verify_code'),
+    path('reset-password-with-code/', views.reset_password_with_code, name='reset_password_with_code'),
+   
 ]
-
 

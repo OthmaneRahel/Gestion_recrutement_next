@@ -3,12 +3,14 @@ from django.shortcuts import render
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
-from django.core.mail import send_mail
+from django.core.mail import BadHeaderError, send_mail
 from App.backends import MultiUserJWTAuthentication,MultiUserBackend
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 
-
+import random
+import string
+from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import serializers,status
 from rest_framework.views import APIView
@@ -124,6 +126,425 @@ class AuthentificationUsers(APIView):
             }
         return Response(data, status=status.HTTP_200_OK)
 
+
+
+
+# @api_view(['POST'])
+# def forgot_password(request):
+#     """Endpoint pour demander la réinitialisation du mot de passe"""
+#     email = request.data.get('email')
+    
+#     print(f"=== REQUÊTE REÇUE ===")
+#     print(f"Email: {email}")
+    
+#     if not email:
+#         return Response({"message": "L'email est requis"}, status=400)
+    
+#     # Générer un token unique
+#     token = ''.join(random.choices(string.ascii_letters + string.digits, k=50))
+    
+#     # Sauvegarder le token (en mémoire pour l'instant)
+#     # Dans un vrai projet, sauvegardez dans un modèle ResetPasswordToken
+#     request.session['reset_token'] = token
+#     request.session['reset_email'] = email
+#     request.session.set_expiry(3600)  # Expire dans 1 heure
+    
+#     # Créer le lien de réinitialisation
+#     reset_link = f"http://localhost:3001/reset-password?token={token}&email={email}"
+    
+#     print(f"Lien de réinitialisation: {reset_link}")
+    
+#     # Version simplifiée - retourne le lien (pour le développement)
+#     return Response({
+#         "message": f"Un lien de réinitialisation a été envoyé à {email}",
+#         "reset_link": reset_link,  # Pour le développement
+#         "success": True
+#     }, status=200)
+
+
+# @api_view(['POST'])
+# def reset_password(request):
+    # """Endpoint pour réinitialiser le mot de passe avec un token"""
+    # token = request.data.get('token')
+    # email = request.data.get('email')
+    # new_password = request.data.get('new_password')
+    # confirm_password = request.data.get('confirm_password')
+    
+    # print(f"=== RESET PASSWORD REÇU ===")
+    # print(f"Token: {token}")
+    # print(f"Email: {email}")
+    
+    # # Vérifications
+    # if not token or not email or not new_password:
+    #     return Response({"message": "Tous les champs sont requis"}, status=400)
+    
+    # if new_password != confirm_password:
+    #     return Response({"message": "Les mots de passe ne correspondent pas"}, status=400)
+    
+    # if len(new_password) < 6:
+    #     return Response({"message": "Le mot de passe doit contenir au moins 6 caractères"}, status=400)
+    
+    # # Pour le développement, on accepte n'importe quel token
+    # # En production, vérifiez dans la base de données
+    
+    # try:
+    #     # Chercher l'utilisateur
+    #     user = None
+    #     try:
+    #         user = Talent.objects.get(email=email)
+    #         print(f"Talent trouvé: {user.email}")
+    #     except Talent.DoesNotExist:
+    #         try:
+    #             user = Recruteur.objects.get(email=email)
+    #             print(f"Recruteur trouvé: {user.email}")
+    #         except Recruteur.DoesNotExist:
+    #             pass
+        
+    #     if not user:
+    #         return Response({"message": "Utilisateur non trouvé"}, status=404)
+        
+    #     # Mettre à jour le mot de passe
+    #     user.password = make_password(new_password)
+    #     user.save()
+        
+    #     print(f"Mot de passe réinitialisé avec succès pour: {email}")
+        
+    #     return Response({"message": "Mot de passe réinitialisé avec succès"}, status=200)
+        
+    # except Exception as e:
+    #     print(f"Erreur dans reset_password: {e}")
+    #     return Response({"message": f"Erreur: {str(e)}"}, status=500)
+
+
+import random
+import string
+from django.core.mail import send_mail
+from django.conf import settings
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.contrib.auth.hashers import make_password
+from .models import Talent, Recruteur, PasswordResetCode
+
+# Dictionnaire pour stocker les codes de vérification (en mémoire)
+from datetime import datetime, timedelta
+
+from django.utils import timezone
+
+@api_view(['POST'])
+def send_verification_code(request):
+    """Envoyer un code de vérification par email"""
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({"message": "L'email est requis"}, status=400)
+    
+    # Vérifier si l'utilisateur existe (optionnel)
+    user_exists = Talent.objects.filter(email=email).exists() or Recruteur.objects.filter(email=email).exists()
+    if not user_exists:
+        return Response({
+            "message": "Si un compte existe avec cet email, vous recevrez un code de vérification"
+        }, status=200)
+    
+    # Générer un code à 6 chiffres
+    code = ''.join(random.choices(string.digits, k=6))
+    
+    # Stocker le code en mémoire
+    PasswordResetCode.objects.filter(email=email, verified=False).delete()
+    PasswordResetCode.objects.create(email=email, code=code)
+    
+    # Nettoyer les anciens codes (plus de 10 minutes)
+    PasswordResetCode.objects.filter(created_at__lt=timezone.now() - timedelta(minutes=10)).delete()
+    
+    # Afficher le code dans la console (pour le développement)
+    print(f"\n" + "="*50)
+    print(f"🔐 CODE DE VÉRIFICATION")
+    print(f"📧 Email: {email}")
+    print(f"🔢 Code: {code}")
+    print(f"⏰ Valable 10 minutes")
+    print("="*50 + "\n")
+    
+    # Essayer d'envoyer l'email
+    try:
+        send_mail(
+            'Code de vérification - JobGate',
+            f'Votre code de vérification est : {code}\n\nCe code est valable 10 minutes.\n\nSi vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.\n\nCordialement,\nL\'équipe JobGate',
+            settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER or 'noreply@jobgate.com',
+            [email],
+            fail_silently=False,
+        )
+        print(f"Code de vérification envoyé à {email}")
+    except Exception as exc:
+        print(f"Erreur d'envoi du code de vérification à {email}: {exc}")
+        return Response({
+            "message": "Impossible d'envoyer le code de vérification. Vérifiez la configuration de l'email.",
+            "error": str(exc)
+        }, status=500)
+    
+    return Response({
+        "message": "Un code de vérification a été envoyé à votre email",
+        "email": email
+    }, status=200)
+
+@api_view(['POST'])
+def verify_code(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
+    print("SESSION KEY:", request.session.session_key)
+    print("SESSION DATA:", dict(request.session.items()))
+    if not email or not code:
+        return Response(
+            {"message": "Email et code requis"},
+            status=400
+        )
+
+    try:
+        reset_code = PasswordResetCode.objects.get(
+            email=email,
+            code=code,
+            verified=False
+        )
+
+        if reset_code.is_expired():
+            return Response(
+                {"message": "Code expiré"},
+                status=400
+            )
+
+        reset_code.verified = True
+        temp_token = ''.join(
+            random.choices(
+                string.ascii_letters + string.digits,
+                k=50
+            )
+        )
+        reset_code.reset_token = temp_token
+        reset_code.save()
+
+        return Response({
+            "message": "Code vérifié avec succès",
+            "reset_token": temp_token,
+            "email": email
+        })
+
+    except PasswordResetCode.DoesNotExist:
+        return Response(
+            {"message": "Code invalide"},
+            status=400
+        )
+
+@api_view(['POST'])
+def reset_password_with_code(request):
+    """Réinitialiser le mot de passe après vérification du code"""
+    token = request.data.get('token')
+    email = request.data.get('email')
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+
+    if not token or not email:
+        return Response({"message": "Email et token requis"}, status=400)
+
+    if new_password != confirm_password:
+        return Response({"message": "Les mots de passe ne correspondent pas"}, status=400)
+
+    if len(new_password) < 6:
+        return Response({"message": "Le mot de passe doit contenir au moins 6 caractères"}, status=400)
+
+    try:
+        reset_code = PasswordResetCode.objects.get(
+            email=email,
+            reset_token=token,
+            verified=True
+        )
+
+        if reset_code.is_expired():
+            return Response({"message": "Le token de réinitialisation a expiré"}, status=400)
+
+        # Chercher l'utilisateur
+        user = None
+        try:
+            user = Talent.objects.get(email=email)
+        except Talent.DoesNotExist:
+            try:
+                user = Recruteur.objects.get(email=email)
+            except Recruteur.DoesNotExist:
+                pass
+
+        if not user:
+            return Response({"message": "Utilisateur non trouvé"}, status=404)
+
+        # Mettre à jour le mot de passe
+        user.password = make_password(new_password)
+        user.save()
+
+        # Supprimer le code utilisé
+        reset_code.delete()
+
+        print(f"✅ Mot de passe réinitialisé avec succès pour: {email}")
+
+        return Response({"message": "Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter."}, status=200)
+
+    except PasswordResetCode.DoesNotExist:
+        return Response({"message": "Token invalide ou code non vérifié"}, status=400)
+    except Exception as e:
+        print(f"❌ Erreur lors de la réinitialisation: {e}")
+        return Response({"message": f"Erreur: {str(e)}"}, status=500)
+
+# @api_view(['POST'])
+# def send_verification_code(request):
+#     """Envoyer un code de vérification par email"""
+#     email = request.data.get('email')
+    
+#     if not email:
+#         return Response({"message": "L'email est requis"}, status=400)
+    
+#     # Vérifier si l'utilisateur existe
+#     user_exists = False
+#     try:
+#         if Talent.objects.filter(email=email).exists() or Recruteur.objects.filter(email=email).exists():
+#             user_exists = True
+#     except:
+#         pass
+    
+#     if not user_exists:
+#         # Pour des raisons de sécurité, on retourne un message générique
+#         return Response({
+#             "message": "Si un compte existe avec cet email, vous recevrez un code de vérification"
+#         }, status=200)
+    
+#     # Générer un code à 6 chiffres
+#     code = ''.join(random.choices(string.digits, k=6))
+    
+#     # Sauvegarder le code dans la base de données
+#     # Supprimer les anciens codes pour cet email
+#     PasswordResetCode.objects.filter(email=email, is_used=False).delete()
+    
+#     reset_code = PasswordResetCode.objects.create(
+#         email=email,
+#         code=code
+#     )
+    
+#     # Envoyer l'email avec le code
+#     subject = 'Code de vérification - JobGate'
+#     message = f"""
+# Bonjour,
+
+# Vous avez demandé la réinitialisation de votre mot de passe.
+
+# Votre code de vérification est : {code}
+
+# Ce code est valable pendant 10 minutes.
+
+# Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+
+# Cordialement,
+# L'équipe JobGate
+# """
+    
+#     try:
+#         send_mail(
+#             subject,
+#             message,
+#             settings.DEFAULT_FROM_EMAIL or 'noreply@jobgate.com',
+#             [email],
+#             fail_silently=False,
+#         )
+#         print(f"Code de vérification envoyé à {email}: {code}")
+#     except Exception as e:
+#         print(f"Erreur d'envoi: {e}")
+    
+#     return Response({
+#         "message": "Un code de vérification a été envoyé à votre email",
+#         "email": email
+#     }, status=200)
+
+
+# @api_view(['POST'])
+# def verify_code(request):
+#     """Vérifier le code et permettre la réinitialisation"""
+#     email = request.data.get('email')
+#     code = request.data.get('code')
+    
+#     if not email or not code:
+#         return Response({"message": "Email et code requis"}, status=400)
+    
+#     try:
+#         reset_code = PasswordResetCode.objects.get(email=email, code=code, is_used=False)
+        
+#         if not reset_code.is_valid():
+#             return Response({"message": "Code expiré. Veuillez demander un nouveau code."}, status=400)
+        
+#         # Marquer le code comme utilisé
+#         reset_code.is_used = True
+#         reset_code.save()
+        
+#         # Générer un token temporaire pour la réinitialisation
+#         temp_token = ''.join(random.choices(string.ascii_letters + string.digits, k=50))
+        
+#         # Stocker le token dans la session
+#         request.session['reset_token'] = temp_token
+#         request.session['reset_email'] = email
+#         request.session.set_expiry(600)  # 10 minutes
+        
+#         return Response({
+#             "message": "Code vérifié avec succès",
+#             "reset_token": temp_token,
+#             "email": email
+#         }, status=200)
+        
+#     except PasswordResetCode.DoesNotExist:
+#         return Response({"message": "Code invalide"}, status=400)
+
+
+# @api_view(['POST'])
+# def reset_password_with_code(request):
+    """Réinitialiser le mot de passe après vérification du code"""
+    token = request.data.get('token')
+    email = request.data.get('email')
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+    
+    # Vérifier le token de session
+    session_token = request.session.get('reset_token')
+    session_email = request.session.get('reset_email')
+    
+    if not session_token or not session_email:
+        return Response({"message": "Session expirée. Veuillez recommencer."}, status=400)
+    
+    if session_token != token or session_email != email:
+        return Response({"message": "Token invalide"}, status=400)
+    
+    if new_password != confirm_password:
+        return Response({"message": "Les mots de passe ne correspondent pas"}, status=400)
+    
+    if len(new_password) < 6:
+        return Response({"message": "Le mot de passe doit contenir au moins 6 caractères"}, status=400)
+    
+    try:
+        # Chercher l'utilisateur
+        user = None
+        try:
+            user = Talent.objects.get(email=email)
+        except Talent.DoesNotExist:
+            try:
+                user = Recruteur.objects.get(email=email)
+            except Recruteur.DoesNotExist:
+                pass
+        
+        if not user:
+            return Response({"message": "Utilisateur non trouvé"}, status=404)
+        
+        # Mettre à jour le mot de passe
+        user.password = make_password(new_password)
+        user.save()
+        
+        # Nettoyer la session
+        del request.session['reset_token']
+        del request.session['reset_email']
+        
+        return Response({"message": "Mot de passe réinitialisé avec succès"}, status=200)
+        
+    except Exception as e:
+        return Response({"message": f"Erreur: {str(e)}"}, status=500)
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response

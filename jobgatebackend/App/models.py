@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager, PermissionsMixin, Group, Permission
 from django.utils import timezone
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.models import AbstractUser
 
 class Talent(AbstractBaseUser,PermissionsMixin):
     first_name = models.CharField(max_length=100)
@@ -64,7 +65,6 @@ class Recruteur(AbstractBaseUser,PermissionsMixin):
         related_name='recruteur_permissions_set',
         related_query_name='custom_user_permissions',
     )
-
 
 class Forum(models.Model):
     nom = models.CharField(max_length=255)
@@ -164,4 +164,18 @@ class Archive_Candidat(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
-    
+from django.utils import timezone
+from datetime import timedelta
+
+class PasswordResetCode(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    reset_token = models.CharField(max_length=64, blank=True, null=True)
+    verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    class Meta:
+        db_table = 'password_reset_code'
