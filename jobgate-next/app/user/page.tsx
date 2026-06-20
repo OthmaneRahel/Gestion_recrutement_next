@@ -125,7 +125,11 @@ interface User {
     last_name: string;
     email: string;
 }
+import { useAuth } from "@/hooks/useAuth";
 const ForumList: React.FC = () => {
+
+    const { logout } = useAuth("talent");
+
     const router = useRouter();
     const [forums, setForums] = useState<Forum[]>([]);
     const [expandedForum, setExpandedForum] = useState<number | null>(null);
@@ -216,6 +220,13 @@ const ForumList: React.FC = () => {
                             <button className="p-1 rounded-full text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 <FiBell className="h-6 w-6" />
                             </button>
+                            <button
+                                onClick={logout}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition"
+                                >
+                                Déconnexion
+                                </button>
+
                             <div className="relative ml-3">
                                 <button
                                     onClick={() => setShowUserMenu(!showUserMenu)}
