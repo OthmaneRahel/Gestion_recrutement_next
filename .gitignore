@@ -44,6 +44,6 @@ next-env.d.ts
 
 
 # task file 
-/app/forums/
+/app/recruteur/
 /app/settings/desactivation-account
 /app/settings/historique-candidatures
