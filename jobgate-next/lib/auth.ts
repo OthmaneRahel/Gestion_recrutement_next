@@ -127,3 +127,14 @@ export async function validateSession(): Promise<AuthSession | null> {
     return null;
   }
 }
+
+export function logout() {
+  clearSession();
+  // Redirection côté client
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+}
+
+// Pourquoi window.location.href au lieu de router.push() ?
+// logout() peut être appelée hors composants React (ex: intercepteur Axios), donc on utilise window.location pour être sûr que la redirection fonctionne partout.
