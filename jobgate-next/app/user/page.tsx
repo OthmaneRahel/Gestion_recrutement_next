@@ -235,7 +235,7 @@ export default function UserHomePage() {
       const upcomingForums = data.filter((f) => f.date_forum >= today);
       setForums(upcomingForums);
     } catch {
-      setError("Impossible de charger les forums. Veuillez réessayer.");
+      setError("Unable to load career forums. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -265,14 +265,14 @@ export default function UserHomePage() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <SparklesIcon className="h-4 w-4" />
-              Événements à venir
+              Upcoming Events
             </div>
             
             <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple mb-4">
-              Forums Carrière
+              Career Forums
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Découvrez les forums à venir et inscrivez-vous en quelques clics
+              Discover upcoming career forums and register in a few clicks
             </p>
           </motion.div>
         </div>
@@ -287,7 +287,7 @@ export default function UserHomePage() {
                 <BuildingOfficeIcon className="h-6 w-6 text-primary/50" />
               </div>
             </div>
-            <p className="mt-4 text-sm text-gray-500 font-medium">Chargement des forums...</p>
+            <p className="mt-4 text-sm text-gray-500 font-medium">Loading career forums...</p>
           </div>
         )}
 
@@ -307,7 +307,7 @@ export default function UserHomePage() {
               className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors"
             >
               <ArrowPathIcon className="h-4 w-4" />
-              Réessayer
+              Try Again
             </button>
           </motion.div>
         )}
@@ -321,9 +321,9 @@ export default function UserHomePage() {
             <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
               <CalendarIcon className="h-10 w-10 text-gray-300" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucun forum disponible</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">No forums available</h3>
             <p className="text-gray-500">
-              Revenez plus tard pour découvrir les prochains événements.
+              Come back later to discover upcoming events.
             </p>
           </motion.div>
         )}
@@ -333,9 +333,9 @@ export default function UserHomePage() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">
-                  {forums.length} forum{forums.length > 1 ? "s" : ""} disponible{forums.length > 1 ? "s" : ""}
+                  {forums.length} forum{forums.length > 1 ? "s" : ""} available
                 </h2>
-                <p className="text-sm text-gray-500">Inscrivez-vous dès maintenant</p>
+                <p className="text-sm text-gray-500">Register now</p>
               </div>
               <button
                 type="button"
@@ -344,7 +344,7 @@ export default function UserHomePage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
               >
                 <ArrowPathIcon className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                {refreshing ? "Actualisation..." : "Actualiser"}
+                {refreshing ? "Refreshing..." : "Refresh"}
               </button>
             </div>
 

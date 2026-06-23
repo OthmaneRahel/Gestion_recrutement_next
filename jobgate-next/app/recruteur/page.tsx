@@ -13,6 +13,7 @@ import {
   FiSearch, FiBell, FiMail, FiHome, FiCalendar, FiUsers, FiBarChart2, FiAlignJustify,
   FiPlus, FiMenu, FiEye, FiX, FiClock, FiUser, FiMapPin, FiInfo, FiChevronRight,
   FiTrash, FiRotateCcw, FiHash, FiLogOut, FiStar, FiTrendingUp, FiActivity,
+  FiFileText,
 } from 'react-icons/fi';
 
 import type { Forum, Recruiter, User, Stats } from '@/types';
@@ -22,9 +23,9 @@ import API from "@/services/api";
 // ── Leaflet doit être chargé uniquement côté client ─────────────────────────
 // const ForumMap = dynamic(() => import('@/components/ForumMap'), { ssr: false });
  const ForumMap = dynamic(() => import('@/components/ForumMap'), { ssr: false });
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// -- Helpers --
 const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString('fr-FR', {
+  new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -178,7 +179,27 @@ export default function DashboardPage() {
       });
       setForums(res.data);
     } catch (err) {
-      console.error('Erreur chargement forums', err);
+      console.error('Error loading forums', err);
+    }
+  };
+
+  const handleExportForumsExcel = async () => {
+    try {
+      const res = await API.get('/export/forums/excel/', {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'forums_export.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      Swal.fire('Succès', 'Le fichier Excel des forums a été généré et téléchargé.', 'success');
+    } catch (error) {
+      console.error("Failed to export forums", error);
+      Swal.fire('Erreur', 'Erreur lors de l\'exportation des forums.', 'error');
     }
   };
 
@@ -225,7 +246,7 @@ export default function DashboardPage() {
 
       Swal.fire({ 
         title: 'Success 🎉', 
-        text: 'Forum créé avec succès !', 
+        text: 'Forum created successfully!', 
         icon: 'success', 
         confirmButtonText: 'OK',
         confirmButtonColor: '#6366f1',
@@ -235,10 +256,10 @@ export default function DashboardPage() {
       fetchForums();
     } catch {
       Swal.fire({ 
-        title: 'Erreur', 
-        text: 'Impossible de créer le forum', 
+        title: 'Error', 
+        text: 'Unable to create the forum', 
         icon: 'error', 
-        confirmButtonText: 'Fermer',
+        confirmButtonText: 'Close',
         confirmButtonColor: '#ef4444',
       });
     }
@@ -251,16 +272,16 @@ export default function DashboardPage() {
       });
       Swal.fire({ 
         icon: 'success', 
-        title: 'Archivé !', 
-        text: 'Forum archivé avec succès.', 
+        title: 'Archived!', 
+        text: 'Forum archived successfully.', 
         confirmButtonColor: '#6366f1',
       });
       fetchForums();
     } catch {
       Swal.fire({ 
         icon: 'error', 
-        title: 'Erreur', 
-        text: "Erreur lors de l'archivage.", 
+        title: 'Error', 
+        text: 'Error during archiving.', 
         confirmButtonColor: '#ef4444',
       });
     }
@@ -362,6 +383,19 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium">Archive</span>
               </motion.li>
             </Link>
+
+            <Link href="/recruteur/profile">
+              <motion.li
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                className="group flex items-center gap-3 px-4 py-2.5 text-gray-600 hover:text-indigo-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 rounded-xl transition-all duration-150"
+              >
+                <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 text-gray-500 group-hover:from-indigo-100 group-hover:to-purple-100 group-hover:text-indigo-600 transition-all duration-150 shadow-sm">
+                  <FiUser className="text-base" />
+                </span>
+                <span className="text-sm font-medium">My Profile</span>
+              </motion.li>
+            </Link>
           </ul>
         </nav>
 
@@ -375,7 +409,7 @@ export default function DashboardPage() {
             <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 text-red-500 shadow-sm">
               <FiLogOut className="text-base" />
             </span>
-            Déconnexion
+            Logout
           </motion.button>
         </div>
 
@@ -420,6 +454,15 @@ export default function DashboardPage() {
             <p className="text-gray-500">Summary of your recent activities</p>
           </motion.div>
           <div className="flex items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleExportForumsExcel}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium rounded-xl shadow-md hover:shadow-lg hover:shadow-green-200 transition-all text-sm"
+            >
+              <FiFileText className="text-lg" />
+              Exporter Forums (Excel)
+            </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -525,7 +568,7 @@ export default function DashboardPage() {
                     </p>
                     <div className="space-y-2">
                       {todayForums.map((forum) => (
-                        <Link key={forum.id} href={`/Candidates/${forum.id}`}>
+                        <Link key={forum.id} href={`/candidates/${forum.id}`}>
                           <motion.div
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -716,6 +759,16 @@ export default function DashboardPage() {
                     >
                       <FiTrash className="text-xl" />
                     </motion.button>
+                    <Link href={`/candidates/${forum.id}`}>
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center gap-2 p-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border border-indigo-200/30 rounded-xl transition-all cursor-pointer text-indigo-700 font-medium text-sm"
+                      >
+                        <FiUsers className="text-indigo-600 text-sm" />
+                        <span>Candidates</span>
+                      </motion.div>
+                    </Link>
                     <Link href={`/Feedback/${forum.id}`}>
                       <motion.div
                         whileHover={{ scale: 1.02 }}
@@ -1050,6 +1103,20 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200/50">
+                <button
+                  onClick={() => setShowForumDetails(false)}
+                  className="px-5 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm"
+                >
+                  Close
+                </button>
+                <Link href={`/candidates/${selectedForum.id}`}>
+                  <button className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2 text-sm">
+                    <FiUsers className="h-4 w-4" />
+                    Manage Candidates
+                  </button>
+                </Link>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -1102,6 +1169,16 @@ function ForumRow({ forum, onView }: { forum: Forum; onView: () => void }) {
       </div>
       <div className="flex items-center gap-2">
         {forum.qrcode_img && <img src={forum.qrcode_img} alt="QR" className="w-12 h-12 rounded-lg" />}
+        <Link href={`/candidates/${forum.id}`}>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200/50 rounded-xl transition-all cursor-pointer text-green-700 font-medium text-xs shadow-sm"
+          >
+            <FiUsers className="text-sm text-green-600" />
+            <span>Candidates</span>
+          </motion.div>
+        </Link>
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

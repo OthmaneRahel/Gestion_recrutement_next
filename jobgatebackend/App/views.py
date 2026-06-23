@@ -3741,16 +3741,19 @@ def list_forums_talent(request):
 @api_view(["POST"])
 def add_feedback(request):
     try:
-        feeback = Feedback_candidat(
-            note = request.data.get("note"),
-            annotation_candidat=request.data.get("annotation_candidat"),
-            candidature_id=request.data.get("candidature_id"),
-            etat = request.data.get("etat")
+        candidature_id = request.data.get("candidature_id")
+        feedback, created = Feedback_candidat.objects.update_or_create(
+            candidature_id=candidature_id,
+            defaults={
+                "note": request.data.get("note"),
+                "annotation_candidat": request.data.get("annotation_candidat"),
+                "etat": request.data.get("etat")
+            }
         )
-        feeback.save()
-        return Response("Feedback crée",status=200)
-    except :
-        return Response("Feedback non crée",status=400)
+        return Response("Feedback enregistré", status=200)
+    except Exception as e:
+        print(f"Error saving feedback: {e}")
+        return Response("Feedback non crée", status=400)
     
 
 @api_view(["PUT"])
@@ -4041,3 +4044,182 @@ def get_archive_candidats(request):
     candidats = Archive_Candidat.objects.all()
     serializer = ArchiveCandidatSerializer(candidats, many=True)
     return Response(serializer.data)
+
+
+@api_view(["GET", "PUT"])
+@permission_classes([IsAuthenticated])
+def recruteur_profile(request):
+    user = request.user
+    if not isinstance(user, Recruteur):
+        return Response({"detail": "Non autorisé ou type d'utilisateur incorrect."}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method == "GET":
+        image_url = None
+        if user.image:
+            image_str = str(user.image)
+            if image_str.startswith("http://") or image_str.startswith("https://"):
+                image_url = image_str
+            else:
+                try:
+                    image_url = request.build_absolute_uri(user.image.url)
+                except Exception:
+                    image_url = None
+        
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "numero_telephone": user.numero_telephone,
+            "entreprise": user.entreprise,
+            "image": image_url
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    elif request.method == "PUT":
+        first_name = request.data.get("first_name", user.first_name)
+        last_name = request.data.get("last_name", user.last_name)
+        email = request.data.get("email", user.email)
+        numero_telephone = request.data.get("numero_telephone", user.numero_telephone)
+        entreprise = request.data.get("entreprise", user.entreprise)
+
+        if email != user.email:
+            if Talent.objects.filter(email=email).exists() or Recruteur.objects.filter(email=email).exists():
+                return Response({"detail": "Cette adresse email est déjà utilisée par un autre compte."}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = email
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.numero_telephone = numero_telephone
+        user.entreprise = entreprise
+
+        password = request.data.get("password")
+        if password:
+            user.password = make_password(password)
+
+        image = request.FILES.get("image")
+        if image:
+            user.image = image
+
+        user.save()
+
+        image_url = None
+        if user.image:
+            image_str = str(user.image)
+            if image_str.startswith("http://") or image_str.startswith("https://"):
+                image_url = image_str
+            else:
+                try:
+                    image_url = request.build_absolute_uri(user.image.url)
+                except Exception:
+                    image_url = None
+
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "numero_telephone": user.numero_telephone,
+            "entreprise": user.entreprise,
+            "image": image_url
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET", "PUT"])
+@permission_classes([IsAuthenticated])
+def talent_profile(request):
+    user = request.user
+    if not isinstance(user, Talent):
+        return Response({"detail": "Non autorisé ou type d'utilisateur incorrect."}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method == "GET":
+        image_url = None
+        if user.image:
+            image_str = str(user.image)
+            if image_str.startswith("http://") or image_str.startswith("https://"):
+                image_url = image_str
+            else:
+                try:
+                    image_url = request.build_absolute_uri(user.image.url)
+                except Exception:
+                    image_url = None
+        
+        cv_url = None
+        if user.cv:
+            try:
+                cv_url = request.build_absolute_uri(user.cv.url)
+            except Exception:
+                cv_url = None
+
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "numero_telephone": user.numero_telephone,
+            "image": image_url,
+            "cv": cv_url,
+            "cv_name": os.path.basename(user.cv.name) if user.cv else None
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    elif request.method == "PUT":
+        first_name = request.data.get("first_name", user.first_name)
+        last_name = request.data.get("last_name", user.last_name)
+        email = request.data.get("email", user.email)
+        numero_telephone = request.data.get("numero_telephone", user.numero_telephone)
+
+        if email != user.email:
+            if Talent.objects.filter(email=email).exists() or Recruteur.objects.filter(email=email).exists():
+                return Response({"detail": "Cette adresse email est déjà utilisée par un autre compte."}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = email
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.numero_telephone = numero_telephone
+
+        password = request.data.get("password")
+        if password:
+            user.password = make_password(password)
+
+        image = request.FILES.get("image")
+        if image:
+            user.image = image
+
+        cv = request.FILES.get("cv")
+        if cv:
+            user.cv = cv
+
+        user.save()
+
+        image_url = None
+        if user.image:
+            image_str = str(user.image)
+            if image_str.startswith("http://") or image_str.startswith("https://"):
+                image_url = image_str
+            else:
+                try:
+                    image_url = request.build_absolute_uri(user.image.url)
+                except Exception:
+                    image_url = None
+        
+        cv_url = None
+        if user.cv:
+            try:
+                cv_url = request.build_absolute_uri(user.cv.url)
+            except Exception:
+                cv_url = None
+
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "numero_telephone": user.numero_telephone,
+            "image": image_url,
+            "cv": cv_url,
+            "cv_name": os.path.basename(user.cv.name) if user.cv else None
+        }
+        return Response(data, status=status.HTTP_200_OK)
+

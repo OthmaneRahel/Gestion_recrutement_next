@@ -2,6 +2,7 @@ from django.urls import path,include
 from . import views
 from .views import AuthentificationUsers
 from .views import get_archive_forums, get_archive_candidats
+from .views_custom import DashboardStatsView, ExportCandidatsExcelView, ExportCandidatsZipCVView, ExportForumsExcelView
 
 
 urlpatterns = [
@@ -31,6 +32,13 @@ urlpatterns = [
     path('send-verification-code/', views.send_verification_code, name='send_verification_code'),
     path('verify-code/', views.verify_code, name='verify_code'),
     path('reset-password-with-code/', views.reset_password_with_code, name='reset_password_with_code'),
-   
+    
+    path('stats/', DashboardStatsView.as_view(), name='dashboard_stats'),
+    path('export/excel/', ExportCandidatsExcelView.as_view(), name='export_excel'),
+    path('export/forums/excel/', ExportForumsExcelView.as_view(), name='export_forums_excel'),
+    path('export/zip/', ExportCandidatsZipCVView.as_view(), name='export_zip'),
+    path('recruteur/profile/', views.recruteur_profile, name='recruteur_profile'),
+    path('talent/profile/', views.talent_profile, name='talent_profile'),
 ]
+
 

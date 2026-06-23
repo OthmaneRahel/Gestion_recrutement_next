@@ -378,7 +378,7 @@ export default function ForumMap({
         }
       })
       .catch(() => {
-        if (active) setError("Impossible de charger la carte");
+        if (active) setError("Unable to load the map");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -398,7 +398,7 @@ export default function ForumMap({
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin" />
-            <span className="text-xs text-gray-400 font-medium">Chargement...</span>
+            <span className="text-xs text-gray-400 font-medium">Loading...</span>
           </div>
         </div>
       </div>

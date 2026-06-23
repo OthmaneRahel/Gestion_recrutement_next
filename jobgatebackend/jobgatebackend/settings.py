@@ -42,7 +42,7 @@ SECRET_KEY = 'django-insecure-ybb6cd6d8_gkgyccxz%k+w_b$(!&i9*sz(o8q*m(z(g1kmu0c0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -63,12 +63,7 @@ INSTALLED_APPS = [
 
 
 
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-]
-
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -123,9 +118,9 @@ WSGI_APPLICATION = 'jobgatebackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE':'django.db.backends.postgresql',
-        'NAME' : 'jobegate_bd',
+        'NAME' : 'jobgate_bd',
         'USER' : 'postgres',
-        'PASSWORD' : 'salma2004',
+        'PASSWORD' : '123456',
         'HOST' : 'localhost',
         'PORT' : '5432',
     }

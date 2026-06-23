@@ -373,7 +373,17 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <HomeIcon className="h-4 w-4 text-gray-400" />
-                    Accueil
+                    Home
+                  </Link>
+
+                  <Link
+                    href="/user/profile"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/5 transition-colors"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <UserCircleIcon className="h-4 w-4 text-gray-400" />
+                    My Profile
                   </Link>
 
                   <button
@@ -383,7 +393,7 @@ export default function Navbar() {
                     role="menuitem"
                   >
                     <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                    Se déconnecter
+                    Logout
                   </button>
                 </motion.div>
               )}

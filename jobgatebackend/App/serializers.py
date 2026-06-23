@@ -23,9 +23,22 @@ class RecruteurSerializer(serializers.ModelSerializer):
         model = Recruteur
         fields = '__all__'
 class CandidatureforumSerializer(serializers.ModelSerializer):
+    feedback = serializers.SerializerMethodField()
+
     class Meta:
         model = Candidature_forum
         fields = '__all__'
+
+    def get_feedback(self, obj):
+        feedback = Feedback_candidat.objects.filter(candidature_id=obj.id).first()
+        if feedback:
+            return {
+                "id": feedback.id,
+                "note": feedback.note,
+                "annotation_candidat": feedback.annotation_candidat,
+                "etat": feedback.etat
+            }
+        return None
 class FeedbackSerializer(serializers.ModelSerializer):
     candidature = CandidatureforumSerializer(read_only=True)
     class Meta:

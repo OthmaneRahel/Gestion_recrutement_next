@@ -9,9 +9,7 @@ import {
 } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// import api from "@/services/api";
 import api from "@/services/api";
-// import { useAuth } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Forum {
@@ -62,7 +60,7 @@ export default function ArchivePage() {
         setForums(forumsRes.data);
         setCandidats(candidatsRes.data);
       } catch (err) {
-        console.error("Erreur chargement archives:", err);
+        console.error("Error loading archives:", err);
       } finally {
         setIsLoading(false);
       }
@@ -125,7 +123,7 @@ export default function ArchivePage() {
   };
 
   const exportToCSV = () => {
-    const headers = ["Prénom", "Nom", "Email", "Téléphone", "Statut", "Note"];
+    const headers = ["First Name", "Last Name", "Email", "Phone", "Status", "Note"];
     const rows = getFilteredCandidates().map((c) => [
       c.first_name, c.last_name, c.email,
       c.numero_telephone || "N/A", c.etat || "N/A", c.note || "N/A",
@@ -137,7 +135,7 @@ export default function ArchivePage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `candidats_${selectedForumName.replace(/\s+/g, "_")}.csv`;
+    link.download = `candidates_${selectedForumName.replace(/\s+/g, "_")}.csv`;
     link.click();
   };
 
@@ -159,7 +157,7 @@ export default function ArchivePage() {
               <FiArchive className="text-blue-600 text-xl" />
             </div>
           </div>
-          <p className="text-gray-500 text-sm font-medium">Chargement des archives…</p>
+          <p className="text-gray-500 text-sm font-medium">Loading archives...</p>
         </div>
       </div>
     );
@@ -179,7 +177,7 @@ export default function ArchivePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
 
-      {/* ─── Header ─────────────────────────────────────────────────── */}
+      {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -190,7 +188,7 @@ export default function ArchivePage() {
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 rounded-xl transition-all hover:text-blue-600 hover:bg-blue-50/50 group"
               >
                 <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-                Retour
+                Back
               </Link>
               <div className="h-8 w-px bg-gradient-to-b from-transparent via-gray-300 to-transparent" />
               <div className="flex items-center gap-3">
@@ -205,7 +203,7 @@ export default function ArchivePage() {
                     Archives
                   </h1>
                   <p className="text-xs text-gray-500">
-                    {forums.length} forum{forums.length !== 1 ? "s" : ""} archivé{forums.length !== 1 ? "s" : ""}
+                    {forums.length} archived forum{forums.length !== 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
@@ -216,7 +214,7 @@ export default function ArchivePage() {
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                 <input
                   type="text"
-                  placeholder="Rechercher un forum…"
+                  placeholder="Search for a forum..."
                   value={recherche}
                   onChange={(e) => setRecherche(e.target.value)}
                   className="pl-9 pr-4 py-2 w-64 text-sm border-0 bg-gray-100/50 rounded-xl transition-all focus:bg-white focus:ring-2 focus:ring-blue-400/50 focus:shadow-lg focus:shadow-blue-100"
@@ -240,14 +238,14 @@ export default function ArchivePage() {
                 onClick={logout}
                 className="px-4 py-2 text-sm font-medium rounded-xl transition-all text-red-600 bg-red-50/50 hover:bg-red-100/50 hover:shadow-lg hover:shadow-red-100"
               >
-                Déconnexion
+                Logout
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* ─── Main ───────────────────────────────────────────────────── */}
+      {/* Main */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {sortedForums.length === 0 ? (
           <motion.div
@@ -260,13 +258,13 @@ export default function ArchivePage() {
                 <FiArchive className="text-4xl text-gray-400" />
               </div>
             </div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">Aucun forum archivé</h2>
-            <p className="text-gray-500 text-sm">Les forums archivés apparaîtront ici.</p>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">No archived forums</h2>
+            <p className="text-gray-500 text-sm">Archived forums will appear here.</p>
           </motion.div>
         ) : (
           <>
             {viewMode === "table" ? (
-              // ─── Tableau forums ────────────────────────────────────
+              // Table view
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-blue-100/50 border border-gray-200/50 overflow-hidden"
@@ -277,14 +275,14 @@ export default function ArchivePage() {
                       <tr className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 border-b border-gray-200/50">
                         {([
                           { key: "nom" as keyof Forum, label: "Forum", icon: null },
-                          { key: "entreprise" as keyof Forum, label: "Entreprise", icon: <FiBriefcase className="text-gray-400" /> },
-                          { key: "lieu" as keyof Forum, label: "Lieu", icon: <FiMapPin className="text-gray-400" /> },
+                          { key: "entreprise" as keyof Forum, label: "Company", icon: <FiBriefcase className="text-gray-400" /> },
+                          { key: "lieu" as keyof Forum, label: "Location", icon: <FiMapPin className="text-gray-400" /> },
                           { key: "date_forum" as keyof Forum, label: "Date", icon: <FiCalendar className="text-gray-400" /> },
                         ]).map(({ key, label, icon }) => (
                           <th key={key} className="px-6 py-4 text-left">
                             <button
-                              onClick={() => handleSort(key)}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider transition-all hover:text-blue-600 group"
+                               onClick={() => handleSort(key)}
+                               className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wider transition-all hover:text-blue-600 group"
                             >
                               {icon}
                               {label}
@@ -294,7 +292,7 @@ export default function ArchivePage() {
                             </button>
                           </th>
                         ))}
-                        <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Candidats</th>
+                        <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Candidates</th>
                         <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -321,7 +319,7 @@ export default function ArchivePage() {
                             <td className="px-6 py-4 text-sm text-gray-600">{forum.lieu || "—"}</td>
                             <td className="px-6 py-4 text-sm text-gray-600">
                               {forum.date_forum
-                                ? new Date(forum.date_forum).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })
+                                ? new Date(forum.date_forum).toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })
                                 : "—"}
                             </td>
                             <td className="px-6 py-4 text-center">
@@ -341,7 +339,7 @@ export default function ArchivePage() {
                                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl transition-all text-white bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 hover:scale-105"
                                 >
                                   <FiEye className="text-xs" />
-                                  Voir
+                                  View
                                 </button>
                                 {isExpanded
                                   ? <FiChevronUp className="text-blue-600" />
@@ -355,11 +353,11 @@ export default function ArchivePage() {
                   </table>
                 </div>
                 <div className="px-6 py-3 bg-gradient-to-r from-blue-50/30 to-purple-50/30 border-t border-gray-200/50 text-xs text-gray-500">
-                  Affichage de {sortedForums.length} forum{sortedForums.length !== 1 ? "s" : ""}
+                  Showing {sortedForums.length} forum{sortedForums.length !== 1 ? "s" : ""}
                 </div>
               </motion.div>
             ) : (
-              // ─── Vue Grille ──────────────────────────────────────
+              // Grid view
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -389,20 +387,20 @@ export default function ArchivePage() {
                             ? "bg-gradient-to-r from-green-400 to-green-500 text-white shadow-lg shadow-green-200"
                             : "bg-gray-100 text-gray-500"
                         }`}>
-                          {forumCandidates.length} candidat{forumCandidates.length !== 1 ? "s" : ""}
+                          {forumCandidates.length} candidate{forumCandidates.length !== 1 ? "s" : ""}
                         </div>
                       </div>
                       
                       <div className="space-y-2 text-sm text-gray-600 mb-4">
                         <p className="flex items-center gap-2">
                           <FiMapPin className="text-gray-400" />
-                          {forum.lieu || "Lieu non spécifié"}
+                          {forum.lieu || "Location not specified"}
                         </p>
                         <p className="flex items-center gap-2">
                           <FiCalendar className="text-gray-400" />
                           {forum.date_forum
-                            ? new Date(forum.date_forum).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })
-                            : "Date non spécifiée"}
+                            ? new Date(forum.date_forum).toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })
+                            : "Date not specified"}
                         </p>
                       </div>
 
@@ -412,7 +410,7 @@ export default function ArchivePage() {
                           className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 hover:scale-105"
                         >
                           <FiUsers className="text-xs" />
-                          Voir les candidats
+                          View candidates
                         </button>
                         <button
                           onClick={() => setExpandedForumId(expandedForumId === forum.id ? null : forum.id)}
@@ -437,12 +435,12 @@ export default function ArchivePage() {
                                 </div>
                                 <div className="flex-1">
                                   <p className="text-sm font-medium">{cand.first_name} {cand.last_name}</p>
-                                  <p className="text-xs text-gray-500">{cand.etat || "Statut inconnu"}</p>
+                                  <p className="text-xs text-gray-500">{cand.etat || "Unknown status"}</p>
                                 </div>
                               </div>
                             ))}
                             {forumCandidates.length > 3 && (
-                              <p className="text-xs text-blue-600 mt-2">+ {forumCandidates.length - 3} autres</p>
+                              <p className="text-xs text-blue-600 mt-2">+ {forumCandidates.length - 3} others</p>
                             )}
                           </motion.div>
                         )}
@@ -453,7 +451,7 @@ export default function ArchivePage() {
               </motion.div>
             )}
 
-            {/* ─── Aperçu rapide (expandable) ──────────────────────── */}
+            {/* Quick view */}
             <AnimatePresence>
               {expandedForumId && viewMode === "table" && (
                 <motion.div
@@ -470,17 +468,17 @@ export default function ArchivePage() {
                       <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-blue-100/50 border border-gray-200/50 p-6">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            Aperçu des candidats — {forum.nom}
+                            Candidate preview — {forum.nom}
                           </h3>
                           <button
                             onClick={() => openCandidatesModal(forum)}
                             className="text-sm text-blue-600 font-medium underline underline-offset-2 hover:opacity-80 transition-all"
                           >
-                            Voir tout →
+                            View all →
                           </button>
                         </div>
                         {candidates.length === 0 ? (
-                          <p className="text-gray-500 text-sm text-center py-8">Aucun candidat pour ce forum.</p>
+                          <p className="text-gray-500 text-sm text-center py-8">No candidates for this forum.</p>
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {candidates.slice(0, 6).map((c) => (
@@ -494,8 +492,8 @@ export default function ArchivePage() {
                                   </div>
                                   <div>
                                     <p className="font-medium text-sm text-foreground">{c.first_name} {c.last_name}</p>
-                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${statutBadge(c.etat || "inconnu")}`}>
-                                      {c.etat || "Statut inconnu"}
+                                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${statutBadge(c.etat || "unknown")}`}>
+                                      {c.etat || "Unknown status"}
                                     </span>
                                   </div>
                                 </div>
@@ -513,7 +511,7 @@ export default function ArchivePage() {
                             ))}
                             {candidates.length > 6 && (
                               <div className="flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-dashed border-gray-200">
-                                <p className="text-sm text-gray-500">+{candidates.length - 6} autres candidats</p>
+                                <p className="text-sm text-gray-500">+{candidates.length - 6} other candidates</p>
                               </div>
                             )}
                           </div>
@@ -528,9 +526,7 @@ export default function ArchivePage() {
         )}
       </main>
 
-      {/* ══════════════════════════════════════════════════════════════
-          MODAL : Tableau des Candidats
-      ══════════════════════════════════════════════════════════════ */}
+      {/* MODAL : Candidates Table */}
       <AnimatePresence>
         {showCandidatesModal && (
           <motion.div
@@ -557,10 +553,10 @@ export default function ArchivePage() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      Candidats — {selectedForumName}
+                      Candidates — {selectedForumName}
                     </h2>
                     <p className="text-xs text-gray-500">
-                      {selectedCandidats.length} candidat{selectedCandidats.length !== 1 ? "s" : ""} au total
+                      {selectedCandidats.length} candidate{selectedCandidats.length !== 1 ? "s" : ""} in total
                     </p>
                   </div>
                 </div>
@@ -570,7 +566,7 @@ export default function ArchivePage() {
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 hover:scale-105"
                   >
                     <FiDownload className="text-xs" />
-                    Exporter CSV
+                    Export CSV
                   </button>
                   <button
                     onClick={() => setShowCandidatesModal(false)}
@@ -587,7 +583,7 @@ export default function ArchivePage() {
                   <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Rechercher par nom, email, statut…"
+                    placeholder="Search by name, email, status..."
                     value={rechercheCand}
                     onChange={(e) => setRechercheCand(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 text-sm border-0 bg-gray-100/50 rounded-xl transition-all focus:bg-white focus:ring-2 focus:ring-blue-400/50 focus:shadow-lg focus:shadow-blue-100"
@@ -595,18 +591,18 @@ export default function ArchivePage() {
                 </div>
               </div>
 
-              {/* Tableau Candidats */}
+              {/* Candidates Table */}
               <div className="flex-1 overflow-auto">
                 {getFilteredCandidates().length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <FiUsers className="text-4xl text-gray-300 mb-3" />
-                    <p className="text-gray-500">Aucun candidat trouvé</p>
+                    <p className="text-gray-500">No candidates found</p>
                   </div>
                 ) : (
                   <table className="w-full">
                     <thead className="bg-gradient-to-r from-blue-50/30 to-purple-50/30 sticky top-0">
                       <tr className="border-b border-gray-200/50">
-                        {["Candidat", "Contact", "Téléphone", "Statut", "Note", "CV"].map((h, i) => (
+                        {["Candidate", "Contact", "Phone", "Status", "Note", "CV"].map((h, i) => (
                           <th
                             key={h}
                             className={`px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider ${i === 5 ? "text-right" : "text-left"}`}
@@ -677,7 +673,7 @@ export default function ArchivePage() {
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl transition-all text-white bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 hover:scale-105"
                             >
                               <FiFile className="text-xs" />
-                              Voir CV
+                              View CV
                             </a>
                           </td>
                         </motion.tr>
@@ -690,13 +686,13 @@ export default function ArchivePage() {
               {/* Modal Footer */}
               <div className="px-6 py-3 border-t border-gray-200/50 bg-gradient-to-r from-blue-50/30 to-purple-50/30 flex items-center justify-between text-xs text-gray-500">
                 <span>
-                  {getFilteredCandidates().length} résultat{getFilteredCandidates().length !== 1 ? "s" : ""} affiché{getFilteredCandidates().length !== 1 ? "s" : ""}
+                  Showing {getFilteredCandidates().length} result{getFilteredCandidates().length !== 1 ? "s" : ""}
                 </span>
                 <button
                   onClick={() => setShowCandidatesModal(false)}
                   className="px-4 py-2 text-sm font-medium rounded-xl transition-all text-gray-600 bg-white/80 border border-gray-200/50 hover:bg-gray-100/50 hover:shadow-lg"
                 >
-                  Fermer
+                  Close
                 </button>
               </div>
             </motion.div>

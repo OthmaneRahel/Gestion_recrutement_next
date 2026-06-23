@@ -188,7 +188,7 @@ interface ForumCardProps {
 
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString("fr-FR", {
+    return new Date(dateStr).toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -206,7 +206,7 @@ function getStatus(ratio: number): {
 } {
   if (ratio >= 1) {
     return {
-      label: "Complet",
+      label: "Full",
       color: "text-rose-500",
       bg: "bg-rose-500/10",
       icon: <span className="text-rose-500 text-xs font-bold">●</span>
@@ -214,14 +214,14 @@ function getStatus(ratio: number): {
   }
   if (ratio >= 0.8) {
     return {
-      label: "Dernières places",
+      label: "Few places left",
       color: "text-amber-500",
       bg: "bg-amber-500/10",
       icon: <span className="text-amber-500 text-xs font-bold">●</span>
     };
   }
   return {
-    label: "Disponible",
+    label: "Available",
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
     icon: <span className="text-emerald-500 text-xs font-bold">●</span>
@@ -307,7 +307,7 @@ export default function ForumCard({ forum, index = 0, className = "" }: ForumCar
 
         <div className="flex items-center justify-between gap-3">
           <div className="text-xs text-gray-400">
-            {isFull ? "Plus de places disponibles" : `${forum.nombre_max - forum.currentNumber} places restantes`}
+            {isFull ? "No places left" : `${forum.nombre_max - forum.currentNumber} places remaining`}
           </div>
 
           <Link
@@ -320,7 +320,7 @@ export default function ForumCard({ forum, index = 0, className = "" }: ForumCar
             aria-disabled={isFull}
             tabIndex={isFull ? -1 : undefined}
           >
-            {isFull ? "Complet" : "Voir le forum"}
+            {isFull ? "Full" : "View Forum"}
             {!isFull && <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
           </Link>
         </div>
