@@ -1,4 +1,4 @@
-// app/settings/update-password/error.tsx
+// app/settings/error.tsx
 'use client';
 
 interface ErrorProps {
@@ -6,15 +6,15 @@ interface ErrorProps {
   reset: () => void;
 }
 
-export default function Error({ error, reset }: ErrorProps) {
+export default function SettingsError({ error, reset }: ErrorProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-      <div className="text-red-500 text-4xl mb-3">🔒</div>
+    <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+      <div className="text-red-500 text-4xl mb-3">⚠️</div>
       <h2 className="text-lg font-semibold text-foreground mb-1">
-        Erreur
+        Une erreur est survenue
       </h2>
       <p className="text-sm text-gray-500 mb-4">
-        {error.message || 'Impossible de modifier le mot de passe'}
+        {error.message || 'Impossible de charger la page'}
       </p>
       <button
         onClick={reset}

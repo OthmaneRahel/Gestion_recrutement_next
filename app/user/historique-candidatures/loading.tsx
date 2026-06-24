@@ -1,4 +1,4 @@
-// app/settings/update-password/loading.tsx
+// app/settings/historique-candidatures/loading.tsx
 export default function Loading() {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
