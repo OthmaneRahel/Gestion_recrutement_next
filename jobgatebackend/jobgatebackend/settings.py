@@ -59,12 +59,13 @@ INSTALLED_APPS = [
     'corsheaders',
     'App.apps.AppConfig',
     'rest_framework.authtoken',
+    'channels',
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 
 
 CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -83,11 +84,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-   
 ]
 
 # Configuration des sessions
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Utilise la base de données
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600  # 1 heure
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
@@ -110,21 +110,42 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'jobgatebackend.wsgi.application'
+ASGI_APPLICATION = 'jobgatebackend.asgi.application'
 
+# othmane modifs
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE':'django.db.backends.postgresql',
+#         'NAME' : 'jobgate_bd',
+#         'USER' : 'postgres',
+#         'PASSWORD' : '123456',
+#         'HOST' : 'localhost',
+#         'PORT' : '5432',
+#     }
+# }
+
+
+# othmane database credentials
 DATABASES = {
     'default': {
         'ENGINE':'django.db.backends.postgresql',
         'NAME' : 'jobgate_bd',
         'USER' : 'postgres',
-        'PASSWORD' : '123456',
+        'PASSWORD' : 'othmane2005',
         'HOST' : 'localhost',
         'PORT' : '5432',
     }
 }
+
 
 
 

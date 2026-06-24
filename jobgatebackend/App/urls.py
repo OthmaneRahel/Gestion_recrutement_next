@@ -6,9 +6,9 @@ from .views_custom import DashboardStatsView, ExportCandidatsExcelView, ExportCa
 
 
 urlpatterns = [
-
     path('auth/', AuthentificationUsers.as_view(),name='test'),
     path('signup/',views.signup,name='ajouter-talent'),
+    path('signout/',views.Logout,name='Logout'),
     path('forums/', views.list_forums, name="list_forums"),
     path('forums_talent/', views.list_forums_talent, name="list_forums_talent"),
     path('forums/create/', views.create_forum, name="create_forum"),
@@ -39,6 +39,9 @@ urlpatterns = [
     path('export/zip/', ExportCandidatsZipCVView.as_view(), name='export_zip'),
     path('recruteur/profile/', views.recruteur_profile, name='recruteur_profile'),
     path('talent/profile/', views.talent_profile, name='talent_profile'),
+    path('desactiver_activer_account/',views.desactiver_activer_account,name="desactiver_activer_account"),
+    path('updatepassword/',views.updatepassword,name="updatepassword"),
+    path('forumcandidature/',views.get_forumcandidature_data_for_user,name="get_forumcandidature_data_for_user")
 ]
 
 

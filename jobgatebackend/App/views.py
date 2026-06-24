@@ -2591,7 +2591,6 @@ from django.http import JsonResponse
 from .models import Talent,Recruteur,Candidature_forum
 from django.forms.models import model_to_dict
 
-import qrcode
 from io import BytesIO
 from django.core.files.base import ContentFile
 from rest_framework.response import Response
@@ -2662,6 +2661,9 @@ class AuthentificationUsers(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(username=email, password=password)
+
+        if not user.is_active:
+            return Response({"message":"Votre compte est desactivee"},status=status.HTTP_403_FORBIDDEN)
 
         if not user:
             raise serializers.ValidationError("Identifiants invalides.")
@@ -3305,6 +3307,8 @@ def list_forums_candidature_demain(request):
 
     return Response(f"Emails de rappel envoyés avec succès à {candidatures.count()} candidats")
 
+
+
 @api_view(["POST"])
 def user_conn(request):
     user = request.user
@@ -3621,32 +3625,16 @@ def InscriptionForum(request):
     return Response("Talent non connecte !!",status=400)
 
     
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
-def create_forum(request):
-   
+def create_forum(request):    
+    try:
         data = request.data
-
-        # # Récupération de l'université associée
-        
-    
-        # Génération du QR code avec un lien d'inscription par exemple
-        # qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        # qr_data = f"http://localhost:3000/forums/{data.get('nom').replace(' ', '_')}"
-        # qr.add_data(qr_data)
-        # qr.make(fit=True)
-        # img = qr.make_image(fill='black', back_color='white')
-
-        # # Sauvegarde de l'image en mémoire
-        # buffer = BytesIO()
-        # img.save(buffer, format="PNG")
-        # file_name = f"{data.get('nom')}_qrcode.png"
-
-        # Création du forum
-
-        # recruteurs_list = json.loads(request.POST.get('recruteurs'))
-        # return JsonResponse(type(recruteurs_list), status=200, safe=False)
-
         forum = Forum(
             nom=data.get("nom"),
             date_forum=data.get("date_forum"),
@@ -3659,23 +3647,46 @@ def create_forum(request):
             duree=data.get("duree"),
             qrcode=request.FILES.get("qrcode"),
         )
-
-
-        # Ajouter le QR code
-        # forum.qrcode_img.save(file_name, ContentFile(buffer.getvalue()))
         forum.save()
+        forum_data = {
+            'id': forum.id,
+            'nom': forum.nom,
+            'lieu': forum.lieu,
+            'date_forum': str(forum.date_forum) if forum.date_forum else None,
+            'description': forum.description[:200] if forum.description else '',
+            'nombre_max': forum.nombre_max,
+            'duree': forum.duree,
+            'date_debut': str(forum.date_debut) if forum.date_debut else None,
+            'date_fin': str(forum.date_fin) if forum.date_fin else None,
+            'recruteurs': forum.recruteurs,
+            'created_at': str(forum.created_at) if hasattr(forum, 'created_at') else None,
+        }
+        try:
+            channel_layer = get_channel_layer()            
+            async_to_sync(channel_layer.group_send)(
+                'notifications',
+                {
+                    'type': 'forum_created',
+                    'forum_data': forum_data
+                }
+            )
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
-        # # serializer = ForumSerializer(data=request.data)
-        # if serializer.is_valid():
-        #         serializer.save()
+        return Response({
+            'message': 'Forum créé avec succès 🎉',
+            'forum_id': forum.id,
+            'notification_sent': True
+        }, status=status.HTTP_201_CREATED)
 
-        return Response(status=status.HTTP_201_CREATED)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    # except Universite.DoesNotExist:
-    #     return Response({"error": "Université introuvable"}, status=status.HTTP_400_BAD_REQUEST)
-    # except Exception as e:
-    #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'error': str(e),
+            'message': 'Erreur lors de la création du forum'
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 from .serializers import ForumSerializer, RecruteurSerializer
@@ -4222,4 +4233,46 @@ def talent_profile(request):
             "cv_name": os.path.basename(user.cv.name) if user.cv else None
         }
         return Response(data, status=status.HTTP_200_OK)
-
+    
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def desactiver_activer_account(request):
+    user = request.user
+    user.is_active = not user.is_active
+    user.save()
+    return Response("Compte désactivé avec succès",status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def Logout(request):
+    refresh_token = request.data.get("refresh")
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Déconnexion réussie"}, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+    else:
+        return Response({"error": "Refresh token manquant"}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def updatepassword(request):
+    user = request.user
+    if not user.check_password(request.data.get("current_password")):
+        return Response("Mot de passe actuel incorrect", status=400)
+    
+    user.password = make_password(request.data.get("new_password"))
+    user.save()
+    return Response("Mot de passe mis à jour avec succès", status=200)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_forumcandidature_data_for_user(request):
+    listforms = Candidature_forum.objects.select_related('forum').filter(talent_id=request.user.id)
+    serializer = CandidatureforumSerializer(listforms, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+

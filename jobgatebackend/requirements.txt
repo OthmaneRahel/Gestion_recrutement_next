@@ -7,6 +7,7 @@ defusedxml==0.7.1
 Django==5.2.5
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
+reportlab==4.2.5
 djangorestframework_simplejwt==5.5.1
 idna==3.10
 oauthlib==3.3.1
@@ -23,3 +24,5 @@ sqlparse==0.5.3
 tzdata==2025.2
 urllib3==2.5.0
 openpyxl==3.1.5
+daphne==4.2.2
+channels==4.3.2
