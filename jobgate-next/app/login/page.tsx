@@ -282,6 +282,8 @@ export default function LoginPage() {
                 setError("Email ou mot de passe incorrect");
             } else if (error.code === "ERR_NETWORK") {
                 setError("Impossible de contacter le serveur. Vérifiez que le backend est démarré.");
+            }else if (error.code === "ERR_BAD_REQUEST") {
+                setError("Votre compte a été désactivé. Veuillez contacter l'administrateur.");
             } else {
                 setError("Une erreur est survenue. Veuillez réessayer.");
             }

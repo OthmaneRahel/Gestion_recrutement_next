@@ -23,6 +23,7 @@ class RecruteurSerializer(serializers.ModelSerializer):
         model = Recruteur
         fields = '__all__'
 class CandidatureforumSerializer(serializers.ModelSerializer):
+    forum = ForumSerializer(read_only=True)
     feedback = serializers.SerializerMethodField()
 
     class Meta:
